@@ -1,1 +1,25 @@
-
+server:
+  port: 0
+spring:
+  application:
+    name: order-ms
+  datasource:
+    password: password
+    url: jdbc:postgresql://172.28.0.2:5432/orders
+    username: cami
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: true
+    show-sql: true
+eureka:
+  client:
+    fetch-registry: true
+    register-with-eureka: true
+    service-url:
+      defaultZone: http://172.17.0.1:8761/eureka
+    instance:
+      preferIpAddress: true

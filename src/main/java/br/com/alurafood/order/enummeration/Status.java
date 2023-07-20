@@ -1,4 +1,4 @@
-package br.com.alurafood.order.model;
+package br.com.alurafood.order.enummeration;
 
 public enum Status {
     CREATED,

@@ -1,60 +1,63 @@
 package br.com.alurafood.order.controller;
 
-import br.com.alurafood.pedidos.dto.PedidoDto;
-import br.com.alurafood.pedidos.dto.StatusDto;
-import br.com.alurafood.pedidos.service.PedidoService;
-import org.springframework.beans.factory.annotation.Autowired;
+import br.com.alurafood.order.dto.OrderDto;
+import br.com.alurafood.order.dto.StatusDto;
+import br.com.alurafood.order.model.Order;
+import br.com.alurafood.order.service.impl.OrderServiceImpl;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotNull;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.util.UriComponentsBuilder;
+import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
-import javax.validation.Valid;
-import javax.validation.constraints.NotNull;
 import java.net.URI;
 import java.util.List;
 
+
 @RestController
-@RequestMapping("/pedidos")
-public class PedidoController {
+@RequestMapping("/orders")
+public record OrderController(
+    OrderServiceImpl orderService
+) {
 
-        @Autowired
-        private PedidoService service;
+  @GetMapping
+  public ResponseEntity<List<OrderDto>> findAll(Pageable pageable) {
+    List<Order> orderPage = orderService.findAll();
+    List<OrderDto> orderDtoPage = orderPage.stream()
+        .map(OrderDto::new)
+        .toList();
+    return ResponseEntity.ok(orderDtoPage);
+  }
 
-        @GetMapping()
-        public List<PedidoDto> listarTodos() {
-            return service.obterTodos();
-        }
+  @GetMapping("/{id}")
+  public ResponseEntity<OrderDto> findById(@PathVariable @NotNull Long id) {
+    Order byId = orderService.findById(id);
+    OrderDto orderDto = new OrderDto(byId);
+    return ResponseEntity.ok(orderDto);
+  }
 
-        @GetMapping("/{id}")
-        public ResponseEntity<PedidoDto> listarPorId(@PathVariable @NotNull Long id) {
-            PedidoDto dto = service.obterPorId(id);
+  @PostMapping
+  public ResponseEntity<OrderDto> createOrder(@RequestBody @Valid OrderDto dto) {
+    Order order = dto.toModel();
+    Order savedOrder = orderService.save(order);
+    URI uri = ServletUriComponentsBuilder
+        .fromCurrentRequest()
+        .path("{/orders/{id}")
+        .buildAndExpand(savedOrder.getId())
+        .toUri();
+    return ResponseEntity.created(uri).body(new OrderDto(savedOrder));
+  }
 
-            return  ResponseEntity.ok(dto);
-        }
+  @PatchMapping("/{id}/status")
+  public ResponseEntity<OrderDto> updateStatus(@PathVariable Long id, @RequestBody StatusDto status) {
+    Order orderUpdatedStatus = orderService.updateStatus(id, status.getStatus());
+    return ResponseEntity.ok(new OrderDto(orderUpdatedStatus));
+  }
 
-        @PostMapping()
-        public ResponseEntity<PedidoDto> realizaPedido(@RequestBody @Valid PedidoDto dto, UriComponentsBuilder uriBuilder) {
-            PedidoDto pedidoRealizado = service.criarPedido(dto);
-
-            URI endereco = uriBuilder.path("/pedidos/{id}").buildAndExpand(pedidoRealizado.getId()).toUri();
-
-            return ResponseEntity.created(endereco).body(pedidoRealizado);
-
-        }
-
-        @PutMapping("/{id}/status")
-        public ResponseEntity<PedidoDto> atualizaStatus(@PathVariable Long id, @RequestBody StatusDto status){
-           PedidoDto dto = service.atualizaStatus(id, status);
-
-            return ResponseEntity.ok(dto);
-        }
-
-
-        @PutMapping("/{id}/pago")
-        public ResponseEntity<Void> aprovaPagamento(@PathVariable @NotNull Long id) {
-            service.aprovaPagamentoPedido(id);
-
-            return ResponseEntity.ok().build();
-
-        }
+  @PatchMapping("/{id}/paid")
+  public ResponseEntity<Void> confirmOrderPayment(@PathVariable @NotNull Long id) {
+    orderService.confirmOrderPayment(id);
+    return ResponseEntity.ok().build();
+  }
 }

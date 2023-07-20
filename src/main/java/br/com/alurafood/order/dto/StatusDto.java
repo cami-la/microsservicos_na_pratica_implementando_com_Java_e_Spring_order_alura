@@ -1,15 +1,13 @@
 package br.com.alurafood.order.dto;
 
-import br.com.alurafood.pedidos.model.Status;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import br.com.alurafood.order.enummeration.Status;
+import lombok.*;
 
-@Getter
-@Setter
 @AllArgsConstructor
+@Builder
+@Getter
 @NoArgsConstructor
+@Setter
 public class StatusDto {
-    private Status status;
+  private Status status;
 }
