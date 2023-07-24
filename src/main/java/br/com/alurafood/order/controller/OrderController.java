@@ -55,9 +55,8 @@ public record OrderController(
     return ResponseEntity.ok(new OrderDto(orderUpdatedStatus));
   }
 
-  @PatchMapping("/{id}/paid")
-  public ResponseEntity<Void> confirmOrderPayment(@PathVariable @NotNull Long id) {
+  @PutMapping("/{id}/paid")
+  public void confirmOrderPayment(@PathVariable @NotNull Long id) {
     orderService.confirmOrderPayment(id);
-    return ResponseEntity.ok().build();
   }
 }
